@@ -83,6 +83,11 @@ jobs:
           set -euo pipefail
           git clone --depth 1 https://github.com/Talinx/jp2a.git /tmp/jp2a-src
           cd /tmp/jp2a-src
+          # jp2a's Windows HANDLE->fd conversion passes a pointer where
+          # _open_osfhandle wants an intptr_t; current mingw-w64 headers
+          # make that a hard error (-Wint-conversion). Upstream says they
+          # no longer maintain Windows builds, so patch it here instead.
+          sed -i 's/_open_osfhandle(handle, _O_RDONLY)/_open_osfhandle((intptr_t)handle, _O_RDONLY)/' src/jp2a.c
           autoreconf -vi
           ./configure
           make -j"$(nproc)"
