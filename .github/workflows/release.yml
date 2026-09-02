@@ -117,9 +117,9 @@ jobs:
         run: cp build/jp2a-win/* dist/jp2a-studio/
 
       - name: Portable .zip
+        shell: pwsh
         run: |
-          cd dist
-          powershell -Command "Compress-Archive -Path jp2a-studio -DestinationPath jp2a-studio-${env:APP_VERSION}-windows-portable.zip"
+          Compress-Archive -Path dist/jp2a-studio -DestinationPath "dist/jp2a-studio-$env:APP_VERSION-windows-portable.zip"
 
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
