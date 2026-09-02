@@ -92,6 +92,7 @@ jobs:
           ./configure
           make -j"$(nproc)"
           mkdir -p "$GITHUB_WORKSPACE/build/jp2a-win"
+          cd src
           cp jp2a.exe "$GITHUB_WORKSPACE/build/jp2a-win/"
           # Bundle every mingw64 DLL jp2a.exe actually links against.
           for dll in $(ldd jp2a.exe | grep -i mingw64 | awk '{print $3}'); do
