@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jp2a Studio</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>▓</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-glyph">▓▒░</span>
+      <div class="brand-text">
+        <h1>jp2a Studio</h1>
+        <p>a live cockpit for the jp2a ASCII&nbsp;art engine</p>
+      </div>
+    </div>
+    <div class="topbar-status" id="jp2aStatus">
+      <span class="dot"></span> checking jp2a…
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- LEFT: controls -->
+    <aside class="panel controls">
+
+      <section class="block" id="dropSection">
+        <h2>Source image</h2>
+        <div class="dropzone" id="dropzone" tabindex="0">
+          <div class="dropzone-inner" id="dropzoneInner">
+            <div class="dz-icon">⇪</div>
+            <p><strong>Drop an image</strong>, click to browse,<br/>or paste with <kbd>Ctrl</kbd>+<kbd>V</kbd></p>
+          </div>
+          <img id="thumb" class="thumb" alt="" hidden />
+        </div>
+        <input type="file" id="fileInput" accept="image/*" hidden />
+
+        <div class="url-row">
+          <input type="text" id="urlInput" placeholder="…or paste an image URL" />
+          <button id="urlFetchBtn" class="btn btn-ghost">Fetch</button>
+        </div>
+        <p class="hint" id="sourceHint">No image loaded yet.</p>
+      </section>
+
+      <section class="block">
+        <h2>Size</h2>
+        <div class="row">
+          <label for="widthRange">Width <span class="val" id="widthVal">100</span></label>
+          <input type="range" id="widthRange" min="10" max="300" value="100" />
+        </div>
+        <div class="row split">
+          <label class="check">
+            <input type="checkbox" id="heightToggle" />
+            <span>Fixed height</span>
+          </label>
+          <input type="number" id="heightNum" min="10" max="200" value="40" disabled />
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Rendering</h2>
+        <div class="toggle-grid">
+          <label class="switch"><input type="checkbox" id="optColors" checked /><span class="slider"></span>Color</label>
+          <label class="switch"><input type="checkbox" id="optFill" /><span class="slider"></span>Fill bg</label>
+          <label class="switch"><input type="checkbox" id="optInvert" /><span class="slider"></span>Invert</label>
+          <label class="switch"><input type="checkbox" id="optBorder" /><span class="slider"></span>Border</label>
+          <label class="switch"><input type="checkbox" id="optFlipX" /><span class="slider"></span>Flip X</label>
+          <label class="switch"><input type="checkbox" id="optFlipY" /><span class="slider"></span>Flip Y</label>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Edges</h2>
+        <label class="switch block-toggle"><input type="checkbox" id="optEdges" /><span class="slider"></span>Edges only</label>
+        <div class="row">
+          <label for="edgeRange">Threshold <span class="val" id="edgeVal">3.0</span></label>
+          <input type="range" id="edgeRange" min="0" max="30" step="0.5" value="3" />
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Character palette</h2>
+        <select id="charPreset">
+          <option value="default">jp2a default</option>
+          <option value="blocks">Blocks · " .:-=+*#%@"</option>
+          <option value="shading">Shading · "░▒▓█"</option>
+          <option value="binary">Binary · "01"</option>
+          <option value="minimal">Minimal · ".oO#"</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <input type="text" id="customChars" placeholder="e.g.  .:-=+*#%@" hidden />
+      </section>
+
+      <section class="block actions">
+        <button id="resetBtn" class="btn btn-ghost">Reset</button>
+      </section>
+
+    </aside>
+
+    <!-- RIGHT: output -->
+    <section class="panel output">
+      <div class="term-chrome">
+        <div class="term-dots"><span></span><span></span><span></span></div>
+        <div class="term-title" id="termTitle">output</div>
+        <div class="term-actions">
+          <button id="copyBtn" class="chip" title="Copy as text">Copy</button>
+          <button id="downloadTxtBtn" class="chip" title="Download .txt">.txt</button>
+          <button id="downloadHtmlBtn" class="chip" title="Download .html">.html</button>
+        </div>
+      </div>
+
+      <div class="term-body" id="termBody">
+        <pre class="empty-state" id="emptyState">
+   ░▒▓█  jp2a Studio  █▓▒░
+
+   drop an image on the left,
+   paste one from your clipboard,
+   or fetch it from a URL —
+
+   your rendering appears here,
+   live, as you tweak the controls.
+        </pre>
+        <div id="asciiOutput" class="ascii-output" hidden></div>
+        <div class="busy" id="busyIndicator" hidden><span></span><span></span><span></span></div>
+      </div>
+
+      <div class="term-footer">
+        <code id="commandLine">$ jp2a</code>
+        <span class="meta" id="metaLine"></span>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

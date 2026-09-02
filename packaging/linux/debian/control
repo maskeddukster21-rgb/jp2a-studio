@@ -1,0 +1,15 @@
+Package: jp2a-studio
+Version: __VERSION__
+Section: graphics
+Priority: optional
+Architecture: all
+Depends: python3 (>= 3.8), python3-pil, jp2a
+Maintainer: jp2a Studio <Sicklingamer@gmail.com>
+Homepage: __HOMEPAGE__
+Description: Live, sleek local GUI for the jp2a ASCII-art converter
+ jp2a Studio is a small local web app that wraps the jp2a command-line
+ tool with a modern, dark, glassmorphism control panel. Drop in an image
+ (or paste one, or fetch it from a URL) and every render is genuine jp2a
+ output, updated live as you tweak width, colors, edges, borders and
+ character palettes. Ships with copy/download of both plain-text and
+ colored HTML output.

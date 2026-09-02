@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=jp2a Studio
+GenericName=ASCII Art Converter
+Comment=Live GUI for the jp2a ASCII art converter
+Exec=jp2a-studio
+Icon=jp2a-studio
+Terminal=false
+Categories=Graphics;Utility;
+StartupNotify=false

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec python3 /usr/share/jp2a-studio/server.py "$@"

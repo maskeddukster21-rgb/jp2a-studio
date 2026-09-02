@@ -1,0 +1,148 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (no leading v), e.g. 1.0.0"
+        required: false
+        default: "0.0.0-dev"
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set.outputs.version }}
+    steps:
+      - id: set
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-linux-deb:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build .deb
+        run: |
+          chmod +x packaging/linux/build-deb.sh
+          JP2A_STUDIO_HOMEPAGE="https://github.com/${{ github.repository }}" \
+            packaging/linux/build-deb.sh "${{ needs.version.outputs.version }}"
+
+      - name: Sanity-check package metadata
+        run: dpkg-deb --info dist/*.deb && dpkg-deb --contents dist/*.deb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-deb
+          path: dist/*.deb
+
+  build-windows:
+    needs: version
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      APP_VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2 (mingw64 toolchain + jp2a's native deps)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            autoconf-archive
+            git
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-libjpeg-turbo
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-libwebp
+            mingw-w64-x86_64-libexif
+            mingw-w64-x86_64-curl
+            mingw-w64-x86_64-ncurses
+
+      - name: Cross-build jp2a.exe from source (MSYS2 MinGW64)
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/Talinx/jp2a.git /tmp/jp2a-src
+          cd /tmp/jp2a-src
+          autoreconf -vi
+          ./configure
+          make -j"$(nproc)"
+          mkdir -p "$GITHUB_WORKSPACE/build/jp2a-win"
+          cp jp2a.exe "$GITHUB_WORKSPACE/build/jp2a-win/"
+          # Bundle every mingw64 DLL jp2a.exe actually links against.
+          for dll in $(ldd jp2a.exe | grep -i mingw64 | awk '{print $3}'); do
+            cp "$dll" "$GITHUB_WORKSPACE/build/jp2a-win/"
+          done
+          ls -la "$GITHUB_WORKSPACE/build/jp2a-win"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python build deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pillow
+
+      - name: Build PyInstaller bundle
+        run: pyinstaller packaging/windows/jp2a-studio.spec
+
+      - name: Merge jp2a.exe + DLLs into the PyInstaller bundle
+        run: cp build/jp2a-win/* dist/jp2a-studio/
+
+      - name: Portable .zip
+        run: |
+          cd dist
+          powershell -Command "Compress-Archive -Path jp2a-studio -DestinationPath jp2a-studio-${env:APP_VERSION}-windows-portable.zip"
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer .exe
+        run: |
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            "packaging/windows/installer.iss" \
+            "/DAppVersion=${APP_VERSION}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            dist/*windows-setup.exe
+            dist/*windows-portable.zip
+
+  release:
+    needs: [version, build-linux-deb, build-windows]
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: jp2a Studio ${{ needs.version.outputs.version }}
+          files: |
+            artifacts/linux-deb/*.deb
+            artifacts/windows-installer/*
+          generate_release_notes: true

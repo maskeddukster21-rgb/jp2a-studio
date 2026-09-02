@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install jp2a + Pillow
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jp2a
+          pip install pillow
+
+      - name: Byte-compile server.py
+        run: python -m py_compile app/server.py
+
+      - name: Start server and hit the API
+        run: |
+          python app/server.py --no-browser --port 8731 &
+          for i in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8731/api/health && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8731/api/health | grep '"jp2a": true'
+          curl -sf -o /dev/null -w '%{http_code}' http://127.0.0.1:8731/ | grep 200
+
+      - name: Validate .deb builds
+        run: |
+          chmod +x packaging/linux/build-deb.sh
+          packaging/linux/build-deb.sh 0.0.0-ci
+          dpkg-deb --info dist/*.deb
