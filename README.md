@@ -32,7 +32,7 @@ detects your package manager, installs `jp2a` if needed, and drops a `jp2a-studi
 `~/.local/bin`:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/REPLACE_OWNER/jp2a-studio/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/maskeddukster21-rgb/jp2a-studio/main/scripts/install.sh | bash
 ```
 
 ### Windows
@@ -45,7 +45,7 @@ alongside it.
 ## Building from source
 
 ```sh
-git clone https://github.com/REPLACE_OWNER/jp2a-studio.git
+git clone https://github.com/maskeddukster21-rgb/jp2a-studio.git
 cd jp2a-studio
 python3 app/server.py
 ```

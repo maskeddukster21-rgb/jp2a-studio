@@ -8,7 +8,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PKG_SRC="$REPO_ROOT/packaging/linux/debian"
 APP_SRC="$REPO_ROOT/app"
 ASSETS="$REPO_ROOT/assets"
-HOMEPAGE="${JP2A_STUDIO_HOMEPAGE:-https://github.com/example/jp2a-studio}"
+HOMEPAGE="${JP2A_STUDIO_HOMEPAGE:-https://github.com/maskeddukster21-rgb/jp2a-studio}"
 
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT

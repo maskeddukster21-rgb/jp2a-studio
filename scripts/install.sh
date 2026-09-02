@@ -7,7 +7,7 @@
 # itself rather than bundling a binary.
 set -euo pipefail
 
-REPO_SLUG="${JP2A_STUDIO_REPO:-REPLACE_OWNER/jp2a-studio}"
+REPO_SLUG="${JP2A_STUDIO_REPO:-maskeddukster21-rgb/jp2a-studio}"
 REPO_URL="https://github.com/${REPO_SLUG}"
 INSTALL_DIR="${JP2A_STUDIO_INSTALL_DIR:-$HOME/.local/share/jp2a-studio}"
 BIN_DIR="${JP2A_STUDIO_BIN_DIR:-$HOME/.local/bin}"
